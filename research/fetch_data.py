@@ -17,7 +17,7 @@ import numpy as np, pandas as pd
 
 OUT = os.environ.get("OUT", "out")
 os.makedirs(OUT, exist_ok=True)
-SEC_UA = {"User-Agent": "stock-paper-bot research cashoutsav8-bit@users.noreply.github.com", "Accept-Encoding": "identity"}
+SEC_UA = {"User-Agent": "stock-paper-bot research " + os.environ.get("SEC_CONTACT", "cashoutsav8-bit@users.noreply.github.com"), "Accept-Encoding": "identity"}
 WEB_UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126 Safari/537.36"}
 LOG = open(os.path.join(OUT, "log.txt"), "a", encoding="utf-8")
 STATUS = {}
@@ -201,7 +201,7 @@ def yahoo(sym):
         url = (f"https://query{n}.finance.yahoo.com/v8/finance/chart/{s}?period1={P1}&period2={int(time.time())}"
                f"&interval=1d&events=div%7Csplit&includeAdjustedClose=true")
         try:
-            j = json.loads(get(url, WEB_UA, tries=3, timeout=30))
+            j = json.loads(get(url, WEB_UA, tries=3, timeout=30, pause=0.3))
             r = j["chart"]["result"][0]
             ts = r.get("timestamp")
             if not ts:

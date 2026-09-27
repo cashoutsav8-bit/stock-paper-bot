@@ -2,7 +2,7 @@ name: Stock paper bot
 
 on:
   schedule:
-    - cron: "4,19,34,49 * * * 1-5"   # backup trigger, weekdays every 15 min (the self-scheduling loop below is the main one)
+    - cron: "4 * * * *"   # hourly backup trigger in case the self-scheduling loop below ever stops
   workflow_dispatch: {}               # "Run workflow" button; also how each run starts the next one
   push:
     branches: [main]
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 80   # must be longer than the sleep below (55 min off-hours)
     env:
       PAPERBOT_DATA: ${{ github.workspace }}/docs
       TZ: America/New_York

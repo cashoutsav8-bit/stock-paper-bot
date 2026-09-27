@@ -213,7 +213,7 @@ def write_all(books, live, ctx, spy_bars, now):
 <h2>Return since start (daily closes)</h2>{line_chart(series)}
 <div class=wrap><table><tr><th>Strategy</th><th class=n>Equity (close)</th><th class=n>Return (close)</th><th class=n>Return (live)</th><th class=n>Positions</th><th class=n>Closed trades</th></tr>{rows}</table></div>
 <div class=box><p><b>What to expect</b></p>
-<p>Backtest 2008-2026 for the three combined: about 9.5%/yr, Sharpe 0.93, worst drawdown -16%. They lag SPY in strong melt-up years (2019, 2023) and protect in selloffs (2008, 2022).</p>
+<p>Backtest 2003-2026 for the three combined: about 9.4%/yr, Sharpe 0.94, worst drawdown -14%. They lag SPY in strong melt-up years (2019, 2023) and protect in selloffs (2008, 2022).</p>
 <p>Judge them after 6-8 weeks, not days. A has the widest swings: in the backtest it gave back 23% between late June and late September 2026, close to its worst drawdown on record.</p></div>"""
     open(os.path.join(HERE, "compare.html"), "w", encoding="utf-8").write(html)
     shutil.copyfile(os.path.join(HERE, "compare.html"), os.path.join(HERE, "index.html"))

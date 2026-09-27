@@ -15,7 +15,7 @@ and needs no API key or brokerage account.
      Score = percentile(trailing 12-month dividend yield) + percentile(12-1 month momentum).
      Hold the top 50, equal weight, rebuilt at the first close of each month.
      Hold cash when SPY closes below its 200-day average (checked every day).
-     Backtest 2003-2026: 11.7%/yr, Sharpe 0.91, worst drawdown -19.7%.
+     Backtest 2003-2026: 8.9%/yr, Sharpe 0.75, worst drawdown -25.7% (2016-2026: 10.3%/yr, Sharpe 0.85).
 
   C  SPY mean reversion
      Buy SPY when its 2-day RSI is below 10 and SPY is above its 200-day average.

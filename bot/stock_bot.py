@@ -51,6 +51,7 @@ B_TOP = 50
 C_LOW, C_HIGH = 10, 70
 NAMES = {"A": "Breakout trend", "B": "Carry + momentum", "C": "SPY mean reversion", "D": "Leveraged S&P trend"}
 D_MAX, D_LOOK, D_BAND, MARGIN_RATE = 1.5, 19, 0.05, 0.055
+ACTIVE = "AD"   # B and C retired 2026-09-27 (their code stays below; their history is in docs/retired/)
 DESCR = {
     "A": "S&P 500 stocks at a new 6-month closing high, SPY above its 200-day average. 1% risk per trade, 4&times;ATR trailing stop, max 20 names.",
     "B": "Top 50 S&P 500 stocks by dividend yield + 12-1 momentum, equal weight, rebuilt monthly. Cash when SPY is below its 200-day average.",
@@ -326,7 +327,7 @@ def step_D(book, P, day, share_up):
 def main():
     n = now_et()
     print(f"Stock paper bot run {n:%Y-%m-%d %H:%M} ET (PAPER ONLY, no orders are placed)")
-    books = {k: Book(k) for k in "ABCD"}
+    books = {k: Book(k) for k in ACTIVE}
     spy = D.fetch_many(["SPY"])["SPY"]
     days = complete_days(spy["bars"])
     last_done = min((b.s["last_day"] or "9999") for b in books.values())
@@ -379,7 +380,7 @@ def main():
         ctx = dict(spy_ok=bool(spy_adj.iloc[-1] > spy_sma.iloc[-1]), spy=float(P["close"]["SPY"].loc[days[-1]]),
                    spy_sma=float(spy_sma.loc[days[-1]] * P["close"]["SPY"].loc[days[-1]] / spy_adj.loc[days[-1]]),
                    rsi=float(rsi.loc[days[-1]]), last_day=ds(days[-1]),
-                   b_ranks=books["B"].s["meta"].get("last_ranks", {}),
+                   b_ranks=books["B"].s["meta"].get("last_ranks", {}) if "B" in books else {},
                    d_share=float(share_up.loc[days[-1]]), d_target=float(D_MAX * share_up.loc[days[-1]]))
         json.dump(ctx, open(os.path.join(HERE, "context.json"), "w"), indent=1)
     else:

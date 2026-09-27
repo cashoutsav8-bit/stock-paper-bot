@@ -1,6 +1,6 @@
 # Stock paper bot
 
-Four S&P 500 strategies paper-traded side by side, $5,000 of paper money each.
+Two strategies paper-traded side by side (A and D). B and C were retired on 2026-09-27; their paper history is in `docs/retired/`, $5,000 of paper money each.
 **PAPER ONLY**: it never places orders and needs no API key or brokerage account.
 
 | | Strategy | Rules | Backtest |

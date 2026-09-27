@@ -27,7 +27,7 @@ def cls(x): return "pos" if x >= 0 else "neg"
 
 def nav(prefix, on):
     items = [("compare.html", "Comparison", "cmp")] + [(f"strat_{k}/report.html", f"{k}: {n}", k) for k, n in
-                                                       (("A", "Breakout trend"), ("B", "Carry + momentum"), ("C", "SPY mean reversion"), ("D", "Leveraged S&P trend"))]
+                                                       (("A", "Breakout trend"), ("D", "Leveraged S&P trend"))]
     x = ('<div class=xnav><a href="https://cashoutsav8-bit.github.io/crypto-paper-bot/">Crypto bot</a>'
          '<a class=on href="https://cashoutsav8-bit.github.io/stock-paper-bot/">Stock bot</a></div>')
     return x + "<div class=nav>" + "".join(f'<a class="{"on" if key == on else ""}" href="{prefix}{h}">{t}</a>' for h, t, key in items) + "</div>"
@@ -65,7 +65,7 @@ def line_chart(series, W=900, H=220, pct=True):
             g.append(f'<circle cx="{X(0):.1f}" cy="{Y(vs[0]):.1f}" r="3" fill="{c}"/>')
         else:
             pts = " ".join(f"{X(i):.1f},{Y(v):.1f}" for i, v in enumerate(vs))
-            g.append(f'<polyline points="{pts}" fill="none" stroke="{c}" stroke-width="{2.6 if l=="All 3" else 1.8}"/>')
+            g.append(f'<polyline points="{pts}" fill="none" stroke="{c}" stroke-width="{2.6 if l=="A + D" else 1.8}"/>')
         ends.append([Y(vs[-1]), l, c, vs[-1], X(len(vs) - 1)])
     ends.sort()
     for j in range(1, len(ends)):
@@ -190,12 +190,12 @@ def strategy_page(key, name, descr, b, live, ctx, spy_bars, now):
 def write_all(books, live, ctx, spy_bars, now):
     from stock_bot import NAMES, DESCR, HERE
     res = [strategy_page(k, NAMES[k], DESCR[k], b, live, ctx, spy_bars, now) for k, b in books.items()]
-    res3 = [r for r in res if r["key"] in "ABC"]          # the tested blend; D is tracked on its own
+    res3 = res                                            # combined = all active strategies
     n = min(len(r["curve"]) for r in res3)
     tot = [sum(r["curve"][-n:][i] for r in res3) for i in range(n)]
     L = max(len(r["curve"]) for r in res)
     spy_curve = ([res[0]["spy"][0]] + res[0]["spy"]) if res[0]["spy"] else []
-    series = [(f"{r['key']}", COLORS[r["key"]], [START] * (L - len(r["curve"])) + r["curve"]) for r in res] + [("All 3", COLORS["ALL"], tot)]
+    series = [(f"{r['key']}", COLORS[r["key"]], [START] * (L - len(r["curve"])) + r["curve"]) for r in res] + [("A + D", COLORS["ALL"], tot)]
     if spy_curve:
         series.append(("SPY", COLORS["SPY"], spy_curve))
     tot_eq, tot_live = sum(r["eq"] for r in res3), sum(r["live"] for r in res3)
@@ -205,27 +205,27 @@ def write_all(books, live, ctx, spy_bars, now):
         f"<tr><td><a href='strat_{r['key']}/report.html'>{r['key']}: {r['name']}</a></td><td class=n>${f2(r['eq'])}</td>"
         f"<td class='n {cls(r['eq']/START-1)}'>{r['eq']/START-1:+.2%}</td><td class='n {cls(r['live']/START-1)}'>{r['live']/START-1:+.2%}</td>"
         f"<td class=n>{r['n']}</td><td class=n>{r['trades']} ({r['wins']} W)</td></tr>" for r in res)
-    rows += (f"<tr><td><b>A + B + C combined</b></td><td class=n><b>${f2(tot_eq)}</b></td><td class='n {cls(tot_eq/(3*START)-1)}'><b>{tot_eq/(3*START)-1:+.2%}</b></td>"
-             f"<td class='n {cls(tot_live/(3*START)-1)}'><b>{tot_live/(3*START)-1:+.2%}</b></td><td class=n>{sum(r['n'] for r in res3)}</td><td class=n>{sum(r['trades'] for r in res3)}</td></tr>"
+    rows += (f"<tr><td><b>A + D combined</b></td><td class=n><b>${f2(tot_eq)}</b></td><td class='n {cls(tot_eq/((len(res3)*START))-1)}'><b>{tot_eq/((len(res3)*START))-1:+.2%}</b></td>"
+             f"<td class='n {cls(tot_live/((len(res3)*START))-1)}'><b>{tot_live/((len(res3)*START))-1:+.2%}</b></td><td class=n>{sum(r['n'] for r in res3)}</td><td class=n>{sum(r['trades'] for r in res3)}</td></tr>"
              f"<tr><td class=muted>SPY buy &amp; hold (benchmark)</td><td></td><td class='n {cls(spy_ret)}'>{spy_ret:+.2%}</td><td class='n {cls(spy_live_ret)}'>{spy_live_ret:+.2%}</td><td></td><td></td></tr>")
     gate = ctx.get("spy_ok")
     html = f"""<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="120"><title>Stock Paper Bot</title>
 <style>{CSS}</style>{nav('', 'cmp')}
 <h1>Stock paper bot</h1>
-<p class=muted>Four S&amp;P 500 strategies, $5,000 of paper money each (A, B and C are the tested blend; D, the leveraged S&amp;P trend, is tracked on its own). PAPER ONLY, no real orders. Trades are decided on each day's official close; live values refresh every ~15 minutes during market hours. Updated {now:%b %d %I:%M %p} ET, closes through {ctx.get('last_day','-')}.</p>
+<p class=muted>Two strategies, $5,000 of paper money each: A (breakout trend on S&amp;P 500 stocks) and D (leveraged S&amp;P trend). B and C were retired on Sep 27 2026. PAPER ONLY, no real orders. Trades are decided on each day's official close; live values refresh every ~15 minutes during market hours. Updated {now:%b %d %I:%M %p} ET, closes through {ctx.get('last_day','-')}.</p>
 <p class=muted>Market filter: SPY {ctx.get('spy',0):.2f} vs 200-day average {ctx.get('spy_sma',0):.2f}: <b class={'pos' if gate else 'neg'}>{'uptrend' if gate else 'downtrend'}</b>. SPY 2-day RSI {ctx.get('rsi',0):.1f}.</p>
 <div class=tiles>
-<div class=tile><b class={cls(tot_eq/(3*START)-1)}>${f2(tot_eq)}</b><span class=muted>A + B + C at last close ({tot_eq/(3*START)-1:+.2%})</span></div>
-<div class=tile><b class={cls(tot_live/(3*START)-1)}>${f2(tot_live)}</b><span class=muted>A + B + C live ({tot_live/(3*START)-1:+.2%})</span></div>
+<div class=tile><b class={cls(tot_eq/((len(res3)*START))-1)}>${f2(tot_eq)}</b><span class=muted>A + D at last close ({tot_eq/((len(res3)*START))-1:+.2%})</span></div>
+<div class=tile><b class={cls(tot_live/((len(res3)*START))-1)}>${f2(tot_live)}</b><span class=muted>A + D live ({tot_live/((len(res3)*START))-1:+.2%})</span></div>
 <div class=tile><b class={cls(spy_ret)}>{spy_ret:+.2%}</b><span class=muted>SPY over the same days</span></div>
 </div>
 <h2>Return since start (daily closes)</h2>{line_chart(series)}
 <div class=wrap><table><tr><th>Strategy</th><th class=n>Equity (close)</th><th class=n>Return (close)</th><th class=n>Return (live)</th><th class=n>Positions</th><th class=n>Closed trades</th></tr>{rows}</table></div>
 <div class=box><p><b>What to expect</b></p>
-<p>Backtest 2003-2026 for the three combined: about 9.4%/yr, Sharpe 0.94, worst drawdown -14%. They lag SPY in strong melt-up years (2019, 2023) and protect in selloffs (2008, 2022).</p>
+<p>Backtest 2003-2026 for A + D half and half: 13.0%/yr vs SPY 11.6%, Sharpe 0.83 vs 0.68, worst drawdown -25.5% vs -55%. It beat SPY in 54% of calendar years. It lags in mega-cap melt-ups (2019, 2020, 2023) and protects in selloffs (2008: -5.9% vs -36.8%).</p>
 <p>Judge them after 6-8 weeks, not days. A has the widest swings: in the backtest it gave back 23% between late June and late September 2026, close to its worst drawdown on record.</p></div>"""
     open(os.path.join(HERE, "compare.html"), "w", encoding="utf-8").write(html)
     shutil.copyfile(os.path.join(HERE, "compare.html"), os.path.join(HERE, "index.html"))
-    print(f"\nAll 3: ${tot_eq:,.2f} ({tot_eq/(3*START)-1:+.2%}) at the close, ${tot_live:,.2f} live. Pages: {os.path.join(HERE, 'compare.html')}")
+    print(f"\nCombined: ${tot_eq:,.2f} ({tot_eq/((len(res3)*START))-1:+.2%}) at the close, ${tot_live:,.2f} live. Pages: {os.path.join(HERE, 'compare.html')}")
     for r in res:
         print(f"  {r['key']} {r['name']:20s} ${r['eq']:,.2f} ({r['eq']/START-1:+.2%})  positions {r['n']}")

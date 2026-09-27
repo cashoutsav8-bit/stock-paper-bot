@@ -163,6 +163,38 @@ def fundamentals():
 
 # ---------------- 4. prices ----------------
 P1 = int(datetime(2008, 1, 1, tzinfo=timezone.utc).timestamp())
+
+def diag():
+    """Try each data source a few different ways and record exactly what comes back."""
+    import urllib.error
+    tests = [
+        ("sec_tickers_ua1", "https://www.sec.gov/files/company_tickers_exchange.json", SEC_UA),
+        ("sec_tickers_ua3", "https://www.sec.gov/files/company_tickers_exchange.json", {"User-Agent": "Mozilla/5.0 (compatible; research-bot/1.0; +https://github.com/cashoutsav8-bit)", "Accept": "application/json"}),
+        ("sec_frames", "https://data.sec.gov/api/xbrl/frames/us-gaap/Revenues/USD/CY2019Q1.json", SEC_UA),
+        ("sec_insider_zip", "https://www.sec.gov/files/structureddata/data/insider-transactions-data-sets/2025q4_form345.zip", SEC_UA),
+        ("yahoo_range2y", "https://query1.finance.yahoo.com/v8/finance/chart/SPY?range=2y&interval=1d", WEB_UA),
+        ("yahoo_period1", f"https://query1.finance.yahoo.com/v8/finance/chart/SPY?period1={P1}&period2={int(time.time())}&interval=1d&events=div%7Csplit&includeAdjustedClose=true", WEB_UA),
+        ("yahoo_q2_max", "https://query2.finance.yahoo.com/v8/finance/chart/SPY?range=max&interval=1d", WEB_UA),
+        ("yahoo_btc", "https://query1.finance.yahoo.com/v8/finance/chart/BTC-USD?range=5y&interval=1d", WEB_UA),
+        ("nasdaq_list", "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt", WEB_UA),
+        ("stooq", "https://stooq.com/q/d/l/?s=spy.us&i=d", WEB_UA),
+    ]
+    res = {}
+    for name, url, h in tests:
+        try:
+            req = urllib.request.Request(url, headers=h)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                b = r.read()
+                res[name] = f"OK {r.status} {len(b)} bytes: {b[:120]!r}"
+        except urllib.error.HTTPError as e:
+            res[name] = f"HTTP {e.code}: {e.read()[:300]!r}"
+        except Exception as e:
+            res[name] = f"ERR {type(e).__name__}: {e}"
+        log("diag", name, res[name])
+    json.dump(res, open(os.path.join(OUT, "diag.json"), "w"), indent=1)
+
+
+P1 = int(datetime(2008, 1, 1, tzinfo=timezone.utc).timestamp())
 def yahoo(sym):
     s = sym.replace(".", "-").replace("/", "-")
     for n in (1, 2):
@@ -223,7 +255,9 @@ def main():
     for step in steps:
         try:
             log("=== step", step)
-            if step == "universe":
+            if step == "diag":
+                diag()
+            elif step == "universe":
                 u = universe()
             elif step == "extra":
                 ex = ["SPY", "QQQ", "IWM", "IWC", "GLD", "TLT", "IEF", "UUP", "MSTR", "COIN", "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "^VIX"]

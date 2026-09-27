@@ -1,0 +1,51 @@
+name: Research data pull
+
+# Downloads free public data for backtests (SEC insider filings, SEC financial statements, Yahoo prices)
+# and pushes it to the `research-data` branch. It never trades and never touches the paper bot's files.
+on:
+  workflow_dispatch:
+    inputs:
+      steps:
+        description: "Steps to run (space separated): universe extra insider fundamentals prices"
+        required: false
+        default: "universe extra insider fundamentals prices"
+  push:
+    branches: [main]
+    paths: [".github/workflows/research-data.yml", "research/fetch_data.py"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: research-data
+  cancel-in-progress: true
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -q pandas pyarrow numpy
+      - name: Download data
+        env:
+          OUT: ${{ runner.temp }}/out
+        run: python research/fetch_data.py ${{ github.event.inputs.steps || 'universe extra insider fundamentals prices' }}
+      - name: Push to research-data branch
+        if: always()
+        env:
+          OUT: ${{ runner.temp }}/out
+          TOKEN: ${{ github.token }}
+        run: |
+          cd "$OUT"
+          ls -la
+          git init -q
+          git checkout -q -b research-data
+          git config user.name "research-bot"
+          git config user.email "research-bot@users.noreply.github.com"
+          git add -A
+          git commit -q -m "research data $(date -u +'%Y-%m-%d %H:%M UTC')"
+          git push -q -f "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git" research-data

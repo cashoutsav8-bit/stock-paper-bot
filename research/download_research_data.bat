@@ -8,7 +8,7 @@ set "PY=%USERPROFILE%\anaconda3\python.exe"
 if not exist "%PY%" set "PY=python"
 set "OUT=%USERPROFILE%\research_data"
 REM The SEC asks every automated download to include a contact address:
-set "SEC_CONTACT=cashoutsav8-bit@users.noreply.github.com"
+REM (set inside fetch_data.py)
 echo Getting the latest download script...
 powershell -NoProfile -Command "Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/cashoutsav8-bit/stock-paper-bot/main/research/fetch_data.py -OutFile fetch_data.py"
 "%PY%" -m pip install -q pyarrow pandas numpy

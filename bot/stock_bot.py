@@ -51,12 +51,13 @@ B_TOP = 50
 C_LOW, C_HIGH = 10, 70
 NAMES = {"A": "Breakout trend", "B": "Carry + momentum", "C": "SPY mean reversion", "D": "Leveraged S&P trend"}
 D_MAX, D_LOOK, D_BAND, MARGIN_RATE = 1.5, 19, 0.05, 0.055
+D_DIP_BOOST, D_DIP_DAYS, D_DIP_RSI = 0.5, 5, 10
 ACTIVE = "AD"   # B and C retired 2026-09-27 (their code stays below; their history is in docs/retired/)
 DESCR = {
     "A": "S&P 500 stocks at a new 6-month closing high, SPY above its 200-day average. 1% risk per trade, 4&times;ATR trailing stop, max 20 names.",
     "B": "Top 50 S&P 500 stocks by dividend yield + 12-1 momentum, equal weight, rebuilt monthly. Cash when SPY is below its 200-day average.",
     "C": "Buys SPY when its 2-day RSI drops below 10 in an uptrend (SPY above 200-day average). Sells when RSI rises above 70.",
-    "D": "Holds SPY at up to 1.5x leverage: exposure = 1.5 &times; the share of the last 19 trading days SPY closed above its 200-day average. Fully invested with leverage in uptrends, in cash in downtrends, stepping in between. Borrowing charged at 5.5%/yr.",
+    "D": "Holds SPY with leverage that follows the trend: exposure = 1.5 &times; the share of the last 19 trading days SPY closed above its 200-day average, plus an extra 0.5&times; for 5 days after a sharp dip (2-day RSI under 10) while SPY is above that average. So 1.5&times; in a steady uptrend, up to 2&times; right after a dip, cash in a downtrend. Borrowing charged at 5.5%/yr.",
 }
 
 
@@ -299,7 +300,7 @@ def step_C(book, P, day, spy_ok, rsi):
     elif rsi < C_LOW and spy_ok:
         book.buy(d, "SPY", book.s["cash"], c, SLIP_ETF, why=f"2-day RSI {rsi:.1f} < {C_LOW} with SPY above its 200-day average")
 
-def step_D(book, P, day, share_up):
+def step_D(book, P, day, share_up, dip=0.0):
     """Leveraged S&P trend: target exposure = 1.5 x share of the last 19 closes above the 200-day average.
     Trades only when the exposure is 5+ points away from target. Negative cash = margin loan, charged daily."""
     d = ds(day)
@@ -311,12 +312,13 @@ def step_D(book, P, day, share_up):
         p["last"] = c
     eq = book.value({"SPY": c})
     cur = (p["sh"] * c / eq) if p else 0.0
-    tgt = round(D_MAX * share_up, 4)
+    tgt = round(D_MAX * share_up + D_DIP_BOOST * dip, 4)
     book.s["meta"]["target"] = tgt
     book.s["meta"]["share_up"] = share_up
     if abs(tgt - cur) < D_BAND and not (tgt == 0 and p):
         return
-    why = f"{share_up:.0%} of the last {D_LOOK} closes above the 200-day average: exposure {cur:.0%} -> {tgt:.0%}"
+    why = (f"{share_up:.0%} of the last {D_LOOK} closes above the 200-day average"
+           + (" + dip boost (sharp dip in an uptrend)" if dip else "") + f": exposure {cur:.0%} -> {tgt:.0%}")
     if tgt > cur:
         book.buy(d, "SPY", (tgt - cur) * eq, c, SLIP_ETF, why=why)
     elif p:
@@ -349,6 +351,7 @@ def main():
         spy_sma = spy_adj.rolling(200).mean()
         rsi = rsi2(spy_adj)
         share_up = (spy_adj > spy_sma).astype(float).where(spy_sma.notna()).rolling(D_LOOK).mean()
+        dip_on = ((rsi < D_DIP_RSI) & (spy_adj > spy_sma)).astype(float).rolling(D_DIP_DAYS).max().fillna(0)
         members = [m for m in members if m in raw]
         for key, b in books.items():
             if b.s["last_day"] is None:
@@ -370,7 +373,7 @@ def main():
                 elif key == "C":
                     step_C(b, P, day, spy_ok, float(rsi.loc[day]))
                 else:
-                    step_D(b, P, day, float(share_up.loc[day]))
+                    step_D(b, P, day, float(share_up.loc[day]), float(dip_on.loc[day]))
                 px = {t: p["last"] for t, p in b.s["pos"].items()}
                 eq = b.value(px)
                 append_csv(b.f["equity.csv"], [ds(day), round(eq, 2), len(b.s["pos"]), round(b.s["cash"], 2),
@@ -381,7 +384,8 @@ def main():
                    spy_sma=float(spy_sma.loc[days[-1]] * P["close"]["SPY"].loc[days[-1]] / spy_adj.loc[days[-1]]),
                    rsi=float(rsi.loc[days[-1]]), last_day=ds(days[-1]),
                    b_ranks=books["B"].s["meta"].get("last_ranks", {}) if "B" in books else {},
-                   d_share=float(share_up.loc[days[-1]]), d_target=float(D_MAX * share_up.loc[days[-1]]))
+                   d_share=float(share_up.loc[days[-1]]), d_dip=float(dip_on.loc[days[-1]]),
+                   d_target=float(D_MAX * share_up.loc[days[-1]] + D_DIP_BOOST * dip_on.loc[days[-1]]))
         json.dump(ctx, open(os.path.join(HERE, "context.json"), "w"), indent=1)
     else:
         print(f"Closes are up to date ({ds(days[-1])}). Refreshing live prices only.")

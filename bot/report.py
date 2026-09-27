@@ -110,8 +110,8 @@ def health_rows(key, b, live, ctx, spy_bars, eq_live):
             trig = f"target {ctx.get('d_target', 0):.0%} exposure"
             state = "ok" if ctx.get("d_share", 0) >= 0.99 else ("close" if ctx.get("d_share", 0) > 0 else "bad")
             gap = ctx["spy"] / ctx["spy_sma"] - 1 if ctx.get("spy_sma") else 0
-            dist_s = (f"{ctx.get('d_share', 0):.0%} of last 19 closes above the 200-day avg; SPY {gap:+.1%} vs the avg. "
-                      "Exposure steps down as closes fall below it")
+            dist_s = (f"{ctx.get('d_share', 0):.0%} of last 19 closes above the 200-day avg; SPY {gap:+.1%} vs the avg"
+                      + ("; dip boost ON" if ctx.get("d_dip") else "") + ". Exposure steps down as closes fall below it")
         else:
             trig = f"RSI2 now {ctx.get('rsi', 0):.0f}"
             state = "ok"
@@ -222,7 +222,7 @@ def write_all(books, live, ctx, spy_bars, now):
 <h2>Return since start (daily closes)</h2>{line_chart(series)}
 <div class=wrap><table><tr><th>Strategy</th><th class=n>Equity (close)</th><th class=n>Return (close)</th><th class=n>Return (live)</th><th class=n>Positions</th><th class=n>Closed trades</th></tr>{rows}</table></div>
 <div class=box><p><b>What to expect</b></p>
-<p>Backtest 2003-2026 for A + D half and half: 13.0%/yr vs SPY 11.6%, Sharpe 0.83 vs 0.68, worst drawdown -25.5% vs -55%. It beat SPY in 54% of calendar years. It lags in mega-cap melt-ups (2019, 2020, 2023) and protects in selloffs (2008: -5.9% vs -36.8%).</p>
+<p>Backtest 2003-2026 for A + D half and half: 13.8%/yr vs SPY 11.6%, Sharpe 0.83 vs 0.68, worst drawdown -26% vs -55%. Since 2016: 15.7%/yr vs SPY 15.0%. It beat SPY in 58% of calendar years. It lags in mega-cap melt-ups (2019, 2020, 2023) and protects in selloffs (2008: -5.9% vs -36.8%).</p>
 <p>Judge them after 6-8 weeks, not days. A has the widest swings: in the backtest it gave back 23% between late June and late September 2026, close to its worst drawdown on record.</p></div>"""
     open(os.path.join(HERE, "compare.html"), "w", encoding="utf-8").write(html)
     shutil.copyfile(os.path.join(HERE, "compare.html"), os.path.join(HERE, "index.html"))

@@ -1,0 +1,13 @@
+date,symbol,event,detail
+2026-09-25,MRNA,BUY,"1.0777 sh @ 199.08 = $214.56 | new 126-day high, 6m return +271%, stop 152.53 (23.3% away)"
+2026-09-25,AMD,BUY,"0.5397 sh @ 631.26 = $340.67 | new 126-day high, 6m return +209%, stop 538.07 (14.7% away)"
+2026-09-25,P,BUY,"1.9760 sh @ 126.13 = $249.22 | new 126-day high, 6m return +103%, stop 100.72 (20.1% away)"
+2026-09-25,RVTY,BUY,"2.5594 sh @ 151.26 = $387.14 | new 126-day high, 6m return +74%, stop 131.59 (12.9% away)"
+2026-09-25,WAT,BUY,"1.1035 sh @ 433.97 = $478.90 | new 126-day high, 6m return +44%, stop 388.28 (10.4% away)"
+2026-09-25,MSFT,BUY,"0.9677 sh @ 516.69 = $500.00 | new 126-day high, 6m return +42%, stop 471.87 (8.6% away)"
+2026-09-25,TECH,BUY,"6.8792 sh @ 72.68 = $500.00 | new 126-day high, 6m return +38%, stop 71.89 (1.0% away)"
+2026-09-25,AAPL,BUY,"1.4645 sh @ 341.41 = $500.00 | new 126-day high, 6m return +35%, stop 311.70 (8.6% away)"
+2026-09-25,DHR,BUY,"2.2250 sh @ 224.71 = $500.00 | new 126-day high, 6m return +20%, stop 202.19 (9.9% away)"
+2026-09-25,BIIB,BUY,"2.1388 sh @ 227.83 = $487.28 | new 126-day high, 6m return +19%, stop 204.25 (10.3% away)"
+2026-09-25,WBD,BUY,"16.1860 sh @ 30.89 = $500.00 | new 126-day high, 6m return +14%, stop 29.18 (5.5% away)"
+2026-09-25,AES,SKIP,not enough cash ($342 for $500)

@@ -14,6 +14,7 @@ th{color:#8795a3;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em}
 .wrap{overflow-x:auto} .pos{color:#5cc98a} .neg{color:#ef7a79} .warn{color:#e8b25a}
 .nav{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px}.nav a{color:#e9eef3;text-decoration:none;border:1px solid #26303a;border-radius:6px;padding:5px 10px;font-size:13px}.nav a.on{background:#26303a}
 .box{border:1px solid #26303a;border-radius:8px;padding:12px 14px;margin-top:14px} .box p{margin:4px 0}
+.xnav{display:flex;gap:8px;margin:0 0 10px;font-size:13px}.xnav a{color:#e9eef3;text-decoration:none;padding:4px 10px;border-radius:14px;border:1px solid #26303a}.xnav a.on{background:#e9eef3;color:#10141a;font-weight:600}
 .pill{display:inline-block;font:600 11px/1 ui-monospace,monospace;padding:3px 6px;border-radius:4px;background:#26303a}
 .pill.ok{background:#1c3b2c;color:#79d9a3}.pill.close{background:#3f3219;color:#f0c374}.pill.bad{background:#40211f;color:#f39a93}"""
 
@@ -27,7 +28,9 @@ def cls(x): return "pos" if x >= 0 else "neg"
 def nav(prefix, on):
     items = [("compare.html", "Comparison", "cmp")] + [(f"strat_{k}/report.html", f"{k}: {n}", k) for k, n in
                                                        (("A", "Breakout trend"), ("B", "Carry + momentum"), ("C", "SPY mean reversion"))]
-    return "<div class=nav>" + "".join(f'<a class="{"on" if key == on else ""}" href="{prefix}{h}">{t}</a>' for h, t, key in items) + "</div>"
+    x = ('<div class=xnav><a href="https://cashoutsav8-bit.github.io/crypto-paper-bot/">Crypto bot</a>'
+         '<a class=on href="https://cashoutsav8-bit.github.io/stock-paper-bot/">Stock bot</a></div>')
+    return x + "<div class=nav>" + "".join(f'<a class="{"on" if key == on else ""}" href="{prefix}{h}">{t}</a>' for h, t, key in items) + "</div>"
 
 
 def read_csv(path):

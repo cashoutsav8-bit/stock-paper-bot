@@ -18,7 +18,7 @@ th{color:#8795a3;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em}
 .pill{display:inline-block;font:600 11px/1 ui-monospace,monospace;padding:3px 6px;border-radius:4px;background:#26303a}
 .pill.ok{background:#1c3b2c;color:#79d9a3}.pill.close{background:#3f3219;color:#f0c374}.pill.bad{background:#40211f;color:#f39a93}"""
 
-COLORS = {"A": "#5b9fe8", "B": "#e3a15a", "C": "#5cc4ae", "ALL": "#e9eef3", "SPY": "#7c8b99"}
+COLORS = {"A": "#5b9fe8", "B": "#e3a15a", "C": "#5cc4ae", "D": "#c58af9", "ALL": "#e9eef3", "SPY": "#7c8b99"}
 
 
 def f2(x): return f"{x:,.2f}"
@@ -27,7 +27,7 @@ def cls(x): return "pos" if x >= 0 else "neg"
 
 def nav(prefix, on):
     items = [("compare.html", "Comparison", "cmp")] + [(f"strat_{k}/report.html", f"{k}: {n}", k) for k, n in
-                                                       (("A", "Breakout trend"), ("B", "Carry + momentum"), ("C", "SPY mean reversion"))]
+                                                       (("A", "Breakout trend"), ("B", "Carry + momentum"), ("C", "SPY mean reversion"), ("D", "Leveraged S&P trend"))]
     x = ('<div class=xnav><a href="https://cashoutsav8-bit.github.io/crypto-paper-bot/">Crypto bot</a>'
          '<a class=on href="https://cashoutsav8-bit.github.io/stock-paper-bot/">Stock bot</a></div>')
     return x + "<div class=nav>" + "".join(f'<a class="{"on" if key == on else ""}" href="{prefix}{h}">{t}</a>' for h, t, key in items) + "</div>"
@@ -106,6 +106,12 @@ def health_rows(key, b, live, ctx, spy_bars, eq_live):
             trig = f"rank #{r}" if r else "rank 150+"
             state = "ok" if (r and r <= 50 and gap > 0.02) else ("close" if gap > 0 else "bad")
             dist_s = f"SPY {gap:+.1%} vs 200-day avg; " + ("in top 50" if r and r <= 50 else "outside top 50 at last rebuild")
+        elif key == "D":
+            trig = f"target {ctx.get('d_target', 0):.0%} exposure"
+            state = "ok" if ctx.get("d_share", 0) >= 0.99 else ("close" if ctx.get("d_share", 0) > 0 else "bad")
+            gap = ctx["spy"] / ctx["spy_sma"] - 1 if ctx.get("spy_sma") else 0
+            dist_s = (f"{ctx.get('d_share', 0):.0%} of last 19 closes above the 200-day avg; SPY {gap:+.1%} vs the avg. "
+                      "Exposure steps down as closes fall below it")
         else:
             trig = f"RSI2 now {ctx.get('rsi', 0):.0f}"
             state = "ok"
@@ -141,7 +147,8 @@ def strategy_page(key, name, descr, b, live, ctx, spy_bars, now):
                     + "<p class=muted>A position down with SPY also down is market beta and is normal. Stock-specific weakness is what the exit rule is there for. "
                     + {"A": "The trailing stop cuts a loser at about 1% of the account; nothing else needs to be done by hand.",
                        "B": "B holds 50 names equally, so one bad stock is 2% of the basket. It only sells at the monthly rebuild or if SPY breaks its 200-day average.",
-                       "C": "C holds SPY for a few days after a sharp dip. It has no stop by design; its exit is the RSI bounce."}[key]
+                       "C": "C holds SPY for a few days after a sharp dip. It has no stop by design; its exit is the RSI bounce.",
+                       "D": "D moves exactly with SPY times its exposure (1.5x when fully in). A down day in an uptrend is expected; D only steps down when SPY starts closing below its 200-day average."}[key]
                     + "</p></div>")
     gate = ctx.get("spy_ok")
     gate_html = (f"<p class=muted>Market filter: SPY {ctx.get('spy', 0):.2f} vs 200-day average {ctx.get('spy_sma', 0):.2f}: "
@@ -183,31 +190,33 @@ def strategy_page(key, name, descr, b, live, ctx, spy_bars, now):
 def write_all(books, live, ctx, spy_bars, now):
     from stock_bot import NAMES, DESCR, HERE
     res = [strategy_page(k, NAMES[k], DESCR[k], b, live, ctx, spy_bars, now) for k, b in books.items()]
-    n = min(len(r["curve"]) for r in res)
-    tot = [sum(r["curve"][-n:][i] for r in res) for i in range(n)]
+    res3 = [r for r in res if r["key"] in "ABC"]          # the tested blend; D is tracked on its own
+    n = min(len(r["curve"]) for r in res3)
+    tot = [sum(r["curve"][-n:][i] for r in res3) for i in range(n)]
+    L = max(len(r["curve"]) for r in res)
     spy_curve = ([res[0]["spy"][0]] + res[0]["spy"]) if res[0]["spy"] else []
-    series = [(f"{r['key']}", COLORS[r["key"]], r["curve"]) for r in res] + [("All 3", COLORS["ALL"], tot)]
+    series = [(f"{r['key']}", COLORS[r["key"]], [START] * (L - len(r["curve"])) + r["curve"]) for r in res] + [("All 3", COLORS["ALL"], tot)]
     if spy_curve:
         series.append(("SPY", COLORS["SPY"], spy_curve))
-    tot_eq, tot_live = sum(r["eq"] for r in res), sum(r["live"] for r in res)
+    tot_eq, tot_live = sum(r["eq"] for r in res3), sum(r["live"] for r in res3)
     spy_ret = (spy_curve[-1] / spy_curve[0] - 1) if spy_curve else 0
     spy_live_ret = (live.get("SPY", spy_curve[-1]) / spy_curve[0] - 1) if spy_curve else 0
     rows = "".join(
         f"<tr><td><a href='strat_{r['key']}/report.html'>{r['key']}: {r['name']}</a></td><td class=n>${f2(r['eq'])}</td>"
         f"<td class='n {cls(r['eq']/START-1)}'>{r['eq']/START-1:+.2%}</td><td class='n {cls(r['live']/START-1)}'>{r['live']/START-1:+.2%}</td>"
         f"<td class=n>{r['n']}</td><td class=n>{r['trades']} ({r['wins']} W)</td></tr>" for r in res)
-    rows += (f"<tr><td><b>All 3 combined</b></td><td class=n><b>${f2(tot_eq)}</b></td><td class='n {cls(tot_eq/(3*START)-1)}'><b>{tot_eq/(3*START)-1:+.2%}</b></td>"
-             f"<td class='n {cls(tot_live/(3*START)-1)}'><b>{tot_live/(3*START)-1:+.2%}</b></td><td class=n>{sum(r['n'] for r in res)}</td><td class=n>{sum(r['trades'] for r in res)}</td></tr>"
+    rows += (f"<tr><td><b>A + B + C combined</b></td><td class=n><b>${f2(tot_eq)}</b></td><td class='n {cls(tot_eq/(3*START)-1)}'><b>{tot_eq/(3*START)-1:+.2%}</b></td>"
+             f"<td class='n {cls(tot_live/(3*START)-1)}'><b>{tot_live/(3*START)-1:+.2%}</b></td><td class=n>{sum(r['n'] for r in res3)}</td><td class=n>{sum(r['trades'] for r in res3)}</td></tr>"
              f"<tr><td class=muted>SPY buy &amp; hold (benchmark)</td><td></td><td class='n {cls(spy_ret)}'>{spy_ret:+.2%}</td><td class='n {cls(spy_live_ret)}'>{spy_live_ret:+.2%}</td><td></td><td></td></tr>")
     gate = ctx.get("spy_ok")
     html = f"""<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv="refresh" content="120"><title>Stock Paper Bot</title>
 <style>{CSS}</style>{nav('', 'cmp')}
 <h1>Stock paper bot</h1>
-<p class=muted>Three S&amp;P 500 strategies, $5,000 of paper money each. PAPER ONLY, no real orders. Trades are decided on each day's official close; live values refresh every ~15 minutes during market hours. Updated {now:%b %d %I:%M %p} ET, closes through {ctx.get('last_day','-')}.</p>
+<p class=muted>Four S&amp;P 500 strategies, $5,000 of paper money each (A, B and C are the tested blend; D, the leveraged S&amp;P trend, is tracked on its own). PAPER ONLY, no real orders. Trades are decided on each day's official close; live values refresh every ~15 minutes during market hours. Updated {now:%b %d %I:%M %p} ET, closes through {ctx.get('last_day','-')}.</p>
 <p class=muted>Market filter: SPY {ctx.get('spy',0):.2f} vs 200-day average {ctx.get('spy_sma',0):.2f}: <b class={'pos' if gate else 'neg'}>{'uptrend' if gate else 'downtrend'}</b>. SPY 2-day RSI {ctx.get('rsi',0):.1f}.</p>
 <div class=tiles>
-<div class=tile><b class={cls(tot_eq/(3*START)-1)}>${f2(tot_eq)}</b><span class=muted>all 3 at last close ({tot_eq/(3*START)-1:+.2%})</span></div>
-<div class=tile><b class={cls(tot_live/(3*START)-1)}>${f2(tot_live)}</b><span class=muted>all 3 live ({tot_live/(3*START)-1:+.2%})</span></div>
+<div class=tile><b class={cls(tot_eq/(3*START)-1)}>${f2(tot_eq)}</b><span class=muted>A + B + C at last close ({tot_eq/(3*START)-1:+.2%})</span></div>
+<div class=tile><b class={cls(tot_live/(3*START)-1)}>${f2(tot_live)}</b><span class=muted>A + B + C live ({tot_live/(3*START)-1:+.2%})</span></div>
 <div class=tile><b class={cls(spy_ret)}>{spy_ret:+.2%}</b><span class=muted>SPY over the same days</span></div>
 </div>
 <h2>Return since start (daily closes)</h2>{line_chart(series)}

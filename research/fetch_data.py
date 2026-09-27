@@ -235,6 +235,52 @@ def prices(tickers, name, workers=8):
     return C, V, fails
 
 
+def prices_yf(tickers, name, chunk=100):
+    """Same output as prices(), but through the yfinance library, which handles Yahoo's cookie checks."""
+    import yfinance as yf
+    closes, dvols, fails = {}, {}, []
+    syms = [t.replace(".", "-").replace("/", "-") if not t.startswith("^") and not t.endswith("-USD") else t for t in tickers]
+    back = dict(zip(syms, tickers))
+    t0 = time.time()
+    for i in range(0, len(syms), chunk):
+        part = syms[i:i + chunk]
+        df = None
+        for attempt in range(3):
+            try:
+                df = yf.download(part, start="2008-01-01", auto_adjust=False, actions=False, threads=True,
+                                 progress=False, group_by="column")
+                break
+            except Exception as e:
+                log(f"yfinance chunk {i} attempt {attempt + 1} failed: {e}")
+                time.sleep(10 * (attempt + 1))
+        if df is None or df.empty:
+            fails += [back[s] for s in part]
+            continue
+        adj = df["Adj Close"] if "Adj Close" in df.columns.get_level_values(0) else df["Close"]
+        cl, vol = df["Close"], df["Volume"]
+        for s_ in part:
+            if s_ in adj.columns and adj[s_].notna().sum() > 5:
+                closes[back[s_]] = adj[s_].astype("float32")
+                dvols[back[s_]] = (cl[s_] * vol[s_]).astype("float32")
+            else:
+                fails.append(back[s_])
+        log(f"prices {name} (yfinance): {min(i + chunk, len(syms))}/{len(syms)} ok={len(closes)} fail={len(fails)} {time.time() - t0:.0f}s")
+        time.sleep(1)
+    C = pd.DataFrame(closes).sort_index()
+    C.index = pd.to_datetime(C.index).tz_localize(None) if getattr(C.index, "tz", None) is not None else pd.to_datetime(C.index)
+    V = pd.DataFrame(dvols).reindex(C.index)
+    log(f"prices {name}: done ok={len(closes)} fail={len(fails)} shape={C.shape}")
+    return C, V, fails
+
+
+def get_prices(tickers, name, workers=8):
+    try:
+        import yfinance  # noqa
+        return prices_yf(tickers, name)
+    except ImportError:
+        return prices(tickers, name, workers)
+
+
 def save_wide(df, path):
     df.columns = [str(c) for c in df.columns]
     df.to_parquet(path)
@@ -261,7 +307,7 @@ def main():
                 u = universe()
             elif step == "extra":
                 ex = ["SPY", "QQQ", "IWM", "IWC", "GLD", "TLT", "IEF", "UUP", "MSTR", "COIN", "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "^VIX"]
-                C, V, f = prices(ex, "extra", workers=4)
+                C, V, f = get_prices(ex, "extra", workers=4)
                 C.to_parquet(os.path.join(OUT, "extra_prices.parquet"))
             elif step == "insider":
                 insider()
@@ -270,7 +316,7 @@ def main():
             elif step == "prices":
                 if u is None:
                     u = pd.read_csv(os.path.join(OUT, "universe.csv"))
-                C, V, fails = prices(list(u.ticker), "universe")
+                C, V, fails = get_prices(list(u.ticker), "universe")
                 save_wide(C, os.path.join(OUT, "prices_close.parquet"))
                 save_wide(V, os.path.join(OUT, "prices_dvol.parquet"))
                 pd.Series(fails).to_csv(os.path.join(OUT, "price_failures.csv"), index=False)

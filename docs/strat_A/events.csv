@@ -12,3 +12,5 @@ date,symbol,event,detail
 2026-09-25,WBD,BUY,"16.1860 sh @ 30.89 = $500.00 | new 126-day high, 6m return +14%, stop 29.18 (5.5% away)"
 2026-09-25,AES,SKIP,not enough cash ($342 for $500)
 2026-09-28,A,SKIP,not enough cash ($342 for $451)
+2026-09-29,CRWD,BUY,"1.0237 sh @ 263.00 = $269.23 | new 126-day high, 6m return +177%, stop 214.07 (18.5% away)"
+2026-09-29,NTAP,SKIP,not enough cash ($73 for $303)

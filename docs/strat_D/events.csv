@@ -1,2 +1,3 @@
 date,symbol,event,detail
 2026-09-25,SPY,BUY,"9.7184 sh @ 771.74 = $7,500.00 | 100% of the last 19 closes above the 200-day average: exposure 0% -> 150%"
+2026-10-14,SPY,BUY,"3.2014 sh @ 769.98 = $2,465.04 | 100% of the last 19 closes above the 200-day average + dip boost (sharp dip in an uptrend): exposure 150% -> 200%"

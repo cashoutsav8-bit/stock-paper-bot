@@ -26,3 +26,8 @@ date,symbol,event,detail
 2026-10-13,MPC,SKIP,not enough cash ($73 for $356)
 2026-10-14,MPC,SKIP,not enough cash ($73 for $364)
 2026-10-15,VEEV,SKIP,not enough cash ($73 for $425)
+2026-10-16,AMD,SELL,"all @ 528.22, P&L $-55.61 (-16.3%) | close 528.75 below stop 551.84"
+2026-10-16,P,SELL,"all @ 123.89, P&L $-4.43 (-1.8%) | close 124.01 below stop 129.22"
+2026-10-16,CRWD,SELL,"all @ 227.16, P&L $-36.69 (-13.6%) | close 227.39 below stop 234.42"
+2026-10-16,ADP,BUY,"1.7171 sh @ 289.19 = $496.56 | new 126-day high, 6m return +46%, stop 266.57 (7.7% away)"
+2026-10-16,WST,SKIP,not enough cash ($339 for $497)

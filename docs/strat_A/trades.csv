@@ -1,0 +1,4 @@
+symbol,entry_date,exit_date,entry,exit,pnl_usd,return_pct,reason
+AMD,2026-09-25,2026-10-16,631.2606,528.2213,-55.61,-16.32,close 528.75 below stop 551.84
+P,2026-09-25,2026-10-16,126.126,123.886,-4.43,-1.78,close 124.01 below stop 129.22
+CRWD,2026-09-29,2026-10-16,263.0027,227.1626,-36.69,-13.63,close 227.39 below stop 234.42

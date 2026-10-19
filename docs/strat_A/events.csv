@@ -31,3 +31,4 @@ date,symbol,event,detail
 2026-10-16,CRWD,SELL,"all @ 227.16, P&L $-36.69 (-13.6%) | close 227.39 below stop 234.42"
 2026-10-16,ADP,BUY,"1.7171 sh @ 289.19 = $496.56 | new 126-day high, 6m return +46%, stop 266.57 (7.7% away)"
 2026-10-16,WST,SKIP,not enough cash ($339 for $497)
+2026-10-19,VEEV,SKIP,not enough cash ($339 for $400)

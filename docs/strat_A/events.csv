@@ -38,3 +38,4 @@ date,symbol,event,detail
 2026-10-23,CRL,BUY,"0.9335 sh @ 345.72 = $322.73 | new 126-day high, 6m return +103%, stop 291.33 (15.6% away)"
 2026-10-23,VEEV,SKIP,not enough cash ($16 for $412)
 2026-10-26,EL,SKIP,not enough cash ($16 for $407)
+2026-10-27,PTC,SKIP,not enough cash ($16 for $509)

@@ -45,3 +45,5 @@ date,symbol,event,detail
 2026-11-02,IT,SKIP,not enough cash ($16 for $362)
 2026-11-03,REGN,SKIP,not enough cash ($16 for $457)
 2026-11-04,BBY,SKIP,not enough cash ($16 for $369)
+2026-11-05,CRL,SELL,"all @ 312.71, P&L $-30.81 (-9.5%) | close 313.02 below stop 318.81"
+2026-11-05,ACN,SKIP,not enough cash ($308 for $317)

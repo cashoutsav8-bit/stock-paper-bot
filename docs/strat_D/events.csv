@@ -5,3 +5,4 @@ date,symbol,event,detail
 2026-10-30,SPY,BUY,"3.0767 sh @ 756.10 = $2,326.28 | 100% of the last 19 closes above the 200-day average + dip boost (sharp dip in an uptrend): exposure 152% -> 200%"
 2026-11-05,SPY,TRIM,0.4098 sh @ 732.63 | 100% of the last 19 closes above the 200-day average + dip boost (sharp dip in an uptrend): exposure 207% -> 200%
 2026-11-09,SPY,TRIM,2.8584 sh @ 752.31 | 100% of the last 19 closes above the 200-day average: exposure 195% -> 150%
+2026-11-16,SPY,BUY,"3.0560 sh @ 740.33 = $2,262.44 | 100% of the last 19 closes above the 200-day average + dip boost (sharp dip in an uptrend): exposure 151% -> 200%"

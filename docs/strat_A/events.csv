@@ -57,3 +57,4 @@ date,symbol,event,detail
 2026-11-16,HUM,SKIP,not enough cash ($36 for $365)
 2026-11-17,TSCO,SKIP,not enough cash ($36 for $298)
 2026-11-18,TSCO,SKIP,not enough cash ($36 for $295)
+2026-11-19,MSFT,SELL,"all @ 497.80, P&L $-18.27 (-3.7%) | close 498.30 below stop 500.22"
